@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom"; // For navigation
+import { register } from "../services/api"; // Import the register function from the API service
 
 const SignUpComponent = () => {
   const [data, setData] = useState({
@@ -10,22 +11,43 @@ const SignUpComponent = () => {
     confirmPassword: "",
     verificationType: "Email",
   });
-
-  const navigate = useNavigate(); // Initialize navigate
+  const [error, setError] = useState(null); // For displaying error messages
+  const navigate = useNavigate(); // For navigation
 
   const onChangeHandler = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setData((data) => ({ ...data, [name]: value }));
+    const { name, value } = event.target;
+    setData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const onSubmitHandler = (event) => {
-    event.preventDefault(); // Prevent default form submission behavior
-    // Perform sign-up logic here (e.g., API calls, form validation)
-    console.log("Sign-Up Data:", data);
+  const onSubmitHandler = async (event) => {
+    event.preventDefault(); // Prevent default form submission
 
-    // Navigate to homepage after successful sign-up
-    navigate("/");
+    // Validate password and confirm password
+    if (data.password !== data.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      // Call the register function from the API service
+      const response = await register({
+        username: data.name, // Django expects 'username' for registration
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+      });
+
+      // Handle successful registration
+      console.log("Registration successful:", response.data);
+      setError(null); // Clear any previous errors
+
+      // Redirect the user to the login page
+      navigate("/signin");
+    } catch (err) {
+      // Handle errors for example if email already exists
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+      console.error("Registration failed:", err);
+    }
   };
 
   return (
@@ -35,6 +57,9 @@ const SignUpComponent = () => {
         className="w-[400px] bg-white p-8 rounded-lg shadow-lg flex flex-col gap-5 text-gray-600"
       >
         <h2 className="text-2xl font-semibold text-center text-orange-500">Sign Up</h2>
+
+        {/* Display error message if registration fails */}
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         {/* Form Fields */}
         <div className="flex flex-col gap-5">
@@ -172,7 +197,7 @@ const SignUpComponent = () => {
         <p className="text-sm text-center">
           Already have an account?{" "}
           <span
-            onClick={() => (window.location.href = "/signin")}
+            onClick={() => navigate("/signin")}
             className="text-orange-500 cursor-pointer"
           >
             Login here
