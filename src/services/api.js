@@ -22,8 +22,17 @@ api.interceptors.request.use((config) => {
 export const login = (data) => api.post("/token/", data);
 // Register function
 export const register = (data) => api.post("/register/", data);
-
 // Get orders function
 export const getOrders = () => api.get("/orders/");
 
+// Get cart items
+export const getCart = () => api.get("/cart/");
+
+// Remove item from cart
+export const removeFromCart = (id) => api.delete(`/cart/items/${id}/`);
+// Get restaurants
+export const getRestaurants = () => api.get("/restaurants/");
+
+// Get groceries
+export const getGroceries = () => api.get("/groceries/");
 export default api;
