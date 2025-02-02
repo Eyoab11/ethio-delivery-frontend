@@ -1,21 +1,51 @@
 import React, { useState } from "react";
-
+import { useNavigate } from "react-router-dom"; // For navigation
+import { login } from "../services/api"; 
 const SignInComponent = () => {
   const [data, setData] = useState({
     email: "",
     password: "",
   });
-
+  const [error, setError] = useState(null); 
+  const navigate = useNavigate();
   const onChangeHandler = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setData((data) => ({ ...data, [name]: value }));
+    const { name, value } = event.target;
+    setData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault(); 
+
+    try {
+      // Call the login function from your API service
+      const response = await login({
+        username: data.email,
+        password: data.password,
+      });
+
+      // Store the JWT tokens in localStorage
+      localStorage.setItem("access_token", response.data.access);
+      localStorage.setItem("refresh_token", response.data.refresh);
+
+      // Redirect the user to the homepage or another protected route
+      navigate("/"); // Change this to my desired route
+    } catch (err) {
+      // Handle errors 
+      setError("Invalid email or password. Please try again.");
+      console.error("Login failed:", err);
+    }
   };
 
   return (
     <div className="absolute z-10 w-full h-full bg-opacity-50 flex justify-center items-center">
-      <form className="w-[400px] bg-white p-8 rounded-lg shadow-lg flex flex-col gap-5 text-gray-600">
+      <form
+        onSubmit={handleSubmit}
+        className="w-[400px] bg-white p-8 rounded-lg shadow-lg flex flex-col gap-5 text-gray-600"
+      >
         <h2 className="text-2xl font-semibold text-center text-orange-500">Sign In</h2>
+
+        {/* Display error message if login fails */}
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         {/* Form Fields */}
         <div className="flex flex-col gap-5">
@@ -102,7 +132,7 @@ const SignInComponent = () => {
         <p className="text-sm text-center">
           Don't have an account?{" "}
           <span
-            onClick={() => (window.location.href = "/sign-up")}
+            onClick={() => navigate("/sign-up")} 
             className="text-orange-500 cursor-pointer"
           >
             Sign Up here
